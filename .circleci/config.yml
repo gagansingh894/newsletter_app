@@ -2,7 +2,7 @@
 # Stacks detected: deps:rust:.
 version: 2.1
 jobs:
-  test-rust:
+  build:
     docker:
       - image: cimg/rust:1.77
     steps:
@@ -27,7 +27,7 @@ jobs:
 workflows:
   build-and-test:
     jobs:
-      - test-rust
+      - build
     # - deploy:
     #     requires:
-    #       - test-rust
+    #       - build
