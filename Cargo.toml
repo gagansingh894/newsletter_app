@@ -14,7 +14,12 @@ name = "newsletter_app"
 
 [dependencies]
 actix-web = "4.5.1"
+sqlx = { version = "0.7.1", features = ["runtime-async-std", "tls-native-tls", "postgres", "macros", "chrono", "uuid", "migrate"] }
 tokio = { version = "1.37.0", features = ["rt", "rt-multi-thread", "macros"] }
+serde = { version = "1.0.197", features = ["derive"] }
+config = "0.11.0"
+chrono = "0.4.37"
+uuid = { version = "1.8.0", features = ["v4"] }
 
 [dev-dependencies]
 reqwest = "0.12.3"
