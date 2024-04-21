@@ -5,19 +5,35 @@ jobs:
   build:
     docker:
       - image: cimg/rust:1.77
+        environment:
+          CARGO_TERM_COLOR: always
+          SQLX_VERSION: 0.7.1
+          SQLX_FEATURES: "rustls,postgres"
       - image: postgres:14
         environment:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
-          POSTGRES_DB: newsletter
+          POSTGRES_DB: postgres
     steps:
       - checkout
       - restore_cache:
           key: cargo-{{ checksum "Cargo.lock" }}
       - run:
+          name: "Install sqlx-cli"
           command: |
-            export SQLX_OFFLINE=false
-            export APP_ENVIRONMENT=local
+            cargo install sqlx-cli --version=$SQLX_VERSION --features $SQLX_FEATURES --no-default-features --locked
+      - run:
+          name: "Migrate Database"
+          command: |
+            sudo apt-get install libpq-dev -y 
+            SKIP_DOCKER=true ./scripts/init_db.sh
+      - run:
+          name: "Check sqlx-data.json is up-to-date"
+          command: |
+            cargo sqlx prepare --workspace --check
+      - run:
+          name: "Run tests"
+          command: |
             cargo test
       - save_cache:
           key: cargo-{{ checksum "Cargo.lock" }}
