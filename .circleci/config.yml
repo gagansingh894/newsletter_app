@@ -15,7 +15,10 @@ jobs:
       - restore_cache:
           key: cargo-{{ checksum "Cargo.lock" }}
       - run:
-          command: cargo test
+          command: |
+            ENV SQLX_OFFLINE true
+            ENV APP_ENVIRONMENT local
+            cargo test
       - save_cache:
           key: cargo-{{ checksum "Cargo.lock" }}
           paths:
