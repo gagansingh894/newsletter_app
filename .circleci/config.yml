@@ -16,8 +16,8 @@ jobs:
           key: cargo-{{ checksum "Cargo.lock" }}
       - run:
           command: |
-            ENV SQLX_OFFLINE true
-            ENV APP_ENVIRONMENT local
+            export SQLX_OFFLINE=true
+            export APP_ENVIRONMENT=local
             cargo test
       - save_cache:
           key: cargo-{{ checksum "Cargo.lock" }}
