@@ -1,4 +1,4 @@
-use actix_web::{web, HttpResponse, Responder};
+use actix_web::{HttpResponse, Responder, web};
 use chrono::Utc;
 use serde::Deserialize;
 use sqlx::PgPool;
@@ -12,6 +12,16 @@ pub struct FormData {
     pub name: String,
 }
 
+impl TryFrom<FormData> for NewSubscriber {
+    type Error = String;
+
+    fn try_from(value: FormData) -> Result<Self, Self::Error> {
+        let name = SubscriberName::parse(value.name)?;
+        let email = SubscriberEmail::parse(value.email)?;
+        Ok(Self { email, name })
+    }
+}
+
 #[tracing::instrument(
 name = "Adding a new subscriber"
 skip(form, pool),
@@ -21,8 +31,8 @@ subscriber_name = % form.name,
 )
 )]
 pub async fn subscribe(form: web::Form<FormData>, pool: web::Data<PgPool>) -> impl Responder {
-    let new_subscriber = match parse_subscriber(form.0) {
-        Ok(new_subscriber) => new_subscriber,
+    let new_subscriber = match form.0.try_into() {
+        Ok(form) => form,
         Err(_) => return HttpResponse::BadRequest().finish(),
     };
 
@@ -33,8 +43,8 @@ pub async fn subscribe(form: web::Form<FormData>, pool: web::Data<PgPool>) -> im
 }
 
 #[tracing::instrument(
-    name = "Saving new subscriber details in the database",
-    skip(pool, new_subscriber)
+name = "Saving new subscriber details in the database",
+skip(pool, new_subscriber)
 )]
 pub async fn insert_subscriber(
     pool: &PgPool,
@@ -50,18 +60,11 @@ pub async fn insert_subscriber(
         new_subscriber.name.as_ref(),
         Utc::now()
     )
-    .execute(pool)
-    .await
-    .map_err(|e| {
-        tracing::error!("Failed to execute query: {:?}", e);
-        e
-    })?;
+        .execute(pool)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to execute query: {:?}", e);
+            e
+        })?;
     Ok(())
-}
-
-fn parse_subscriber(form: FormData) -> Result<NewSubscriber, String> {
-    let name = SubscriberName::parse(form.name)?;
-    let email = SubscriberEmail::parse(form.email)?;
-
-    Ok(NewSubscriber { email, name })
 }
