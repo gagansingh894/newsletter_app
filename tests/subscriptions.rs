@@ -36,7 +36,10 @@ async fn subscriber_returns_a_400_when_fields_are_present_but_empty() {
     let test_cases = vec![
         ("name=&email=jack_reacher%40gmail.com", "empty name"),
         ("name=jack%20reacher&email=", "empty email"),
-        ("name=jack%20reacher&email=definitely-not-an-email", "invalid email"),
+        (
+            "name=jack%20reacher&email=definitely-not-an-email",
+            "invalid email",
+        ),
     ];
 
     for (body, description) in test_cases {
