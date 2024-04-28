@@ -4,7 +4,7 @@ use once_cell::sync::Lazy;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
 
-use newsletter_app::configuration::{get_configuration, DatabaseSettings};
+use newsletter_app::configuration::{DatabaseSettings, get_configuration};
 use newsletter_app::email_client::EmailClient;
 use newsletter_app::telemetry::{get_subscriber, init_subscriber};
 
@@ -59,7 +59,7 @@ pub async fn spawn_app() -> TestApp {
     }
 }
 
-pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
+async fn configure_database(config: &DatabaseSettings) -> PgPool {
     // Create database
     let mut connection = PgConnection::connect_with(&config.without_db())
         .await
