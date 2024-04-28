@@ -4,7 +4,7 @@ use once_cell::sync::Lazy;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
 
-use newsletter_app::configuration::{DatabaseSettings, get_configuration};
+use newsletter_app::configuration::{get_configuration, DatabaseSettings};
 use newsletter_app::email_client::EmailClient;
 use newsletter_app::telemetry::{get_subscriber, init_subscriber};
 
@@ -38,8 +38,17 @@ pub async fn spawn_app() -> TestApp {
     configuration.database.database_name = Uuid::new_v4().to_string();
     let connection_pool = configure_database(&configuration.database).await;
 
-    let sender_email = configuration.email_client.sender().expect("Invalid sender email address");
-    let email_client = EmailClient::new(configuration.email_client.base_url, sender_email);
+    let sender_email = configuration
+        .email_client
+        .sender()
+        .expect("Invalid sender email address");
+    let timeout = configuration.email_client.timeout();
+    let email_client = EmailClient::new(
+        configuration.email_client.base_url,
+        sender_email,
+        configuration.email_client.authorization_token,
+        timeout,
+    );
 
     let server = newsletter_app::startup::run(listener, connection_pool.clone(), email_client)
         .expect("Failed to bind the address");
