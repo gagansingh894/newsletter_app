@@ -1,12 +1,12 @@
-use wiremock::matchers::{method, path};
 use wiremock::{Mock, ResponseTemplate};
+use wiremock::matchers::{method, path};
 
-mod common;
+use crate::helpers;
 
 #[tokio::test]
 async fn subscriber_returns_a_200_for_valid_form_data() {
     // Arrange
-    let app = common::spawn_app().await;
+    let app = helpers::spawn_app().await;
 
     Mock::given(path("/email"))
         .and(method("POST"))
@@ -26,7 +26,7 @@ async fn subscriber_returns_a_200_for_valid_form_data() {
 #[tokio::test]
 async fn subscriber_persists_the_new_subscriber() {
     // Arrange
-    let app = common::spawn_app().await;
+    let app = helpers::spawn_app().await;
 
     Mock::given(path("/email"))
         .and(method("POST"))
@@ -55,7 +55,7 @@ async fn subscriber_persists_the_new_subscriber() {
 #[tokio::test]
 async fn subscriber_returns_a_400_when_fields_are_present_but_empty() {
     // Arrange
-    let app = common::spawn_app().await;
+    let app = helpers::spawn_app().await;
     let test_cases = vec![
         ("name=&email=jack_reacher%40gmail.com", "empty name"),
         ("name=jack%20reacher&email=", "empty email"),
@@ -82,7 +82,7 @@ async fn subscriber_returns_a_400_when_fields_are_present_but_empty() {
 #[tokio::test]
 async fn subscriber_returns_a_400_when_data_is_missing() {
     // Arrange
-    let app = common::spawn_app().await;
+    let app = helpers::spawn_app().await;
     let test_cases = vec![
         ("name=jack%20reacher", "missing the email"),
         ("email=jack_reacher%40gmail.com", "missing the name"),
@@ -106,7 +106,7 @@ async fn subscriber_returns_a_400_when_data_is_missing() {
 #[tokio::test]
 async fn subscriber_sends_a_confirmation_email_for_valid_data() {
     // Arrange
-    let app = common::spawn_app().await;
+    let app = helpers::spawn_app().await;
     let body = "name=jack%20reacher&email=jack_reacher%40gmail.com";
 
     Mock::given(path("/email"))
@@ -126,7 +126,7 @@ async fn subscriber_sends_a_confirmation_email_for_valid_data() {
 #[tokio::test]
 async fn subscribe_sends_confirmation_email_with_a_link() {
     // Arrange
-    let app = common::spawn_app().await;
+    let app = helpers::spawn_app().await;
     let body = "name=jack%20reacher&email=jack_reacher%40gmail.com";
 
     Mock::given(path("/email"))
