@@ -1,5 +1,3 @@
-use std::fmt::Debug;
-
 use wiremock::matchers::{method, path};
 use wiremock::{Mock, ResponseTemplate};
 
