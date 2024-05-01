@@ -1,4 +1,4 @@
-use actix_web::{web, HttpResponse};
+use actix_web::{HttpResponse, web};
 use chrono::Utc;
 use serde::Deserialize;
 use sqlx::PgPool;
@@ -6,6 +6,7 @@ use uuid::Uuid;
 
 use crate::domain::{NewSubscriber, SubscriberEmail, SubscriberName};
 use crate::email_client::EmailClient;
+use crate::startup::ApplicationBaseUrl;
 
 #[derive(Deserialize)]
 pub struct FormData {
@@ -25,7 +26,7 @@ impl TryFrom<FormData> for NewSubscriber {
 
 #[tracing::instrument(
 name = "Adding a new subscriber"
-skip(form, pool, email_client),
+skip(form, pool, email_client, base_url),
 fields(
 subscriber_email = % form.email,
 subscriber_name = % form.name,
@@ -35,6 +36,7 @@ pub async fn subscribe(
     form: web::Form<FormData>,
     pool: web::Data<PgPool>,
     email_client: web::Data<EmailClient>,
+    base_url: web::Data<ApplicationBaseUrl>,
 ) -> HttpResponse {
     let new_subscriber = match form.0.try_into() {
         Ok(form) => form,
@@ -46,7 +48,7 @@ pub async fn subscribe(
         Err(_) => HttpResponse::InternalServerError().finish(),
     };
 
-    if send_confirmation_email(&email_client, new_subscriber)
+    if send_confirmation_email(&email_client, new_subscriber, &base_url.0)
         .await
         .is_err()
     {
@@ -56,8 +58,8 @@ pub async fn subscribe(
 }
 
 #[tracing::instrument(
-    name = "Saving new subscriber details in the database",
-    skip(pool, new_subscriber)
+name = "Saving new subscriber details in the database",
+skip(pool, new_subscriber)
 )]
 pub async fn insert_subscriber(
     pool: &PgPool,
@@ -73,24 +75,25 @@ pub async fn insert_subscriber(
         new_subscriber.name.as_ref(),
         Utc::now()
     )
-    .execute(pool)
-    .await
-    .map_err(|e| {
-        tracing::error!("Failed to execute query: {:?}", e);
-        e
-    })?;
+        .execute(pool)
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to execute query: {:?}", e);
+            e
+        })?;
     Ok(())
 }
 
 #[tracing::instrument(
 name = "Send confirmation email to a new subscriber"
-skip(email_client, new_subscriber)
+skip(email_client, new_subscriber, base_url)
 )]
 pub async fn send_confirmation_email(
     email_client: &EmailClient,
     new_subscriber: NewSubscriber,
+    base_url: &str,
 ) -> Result<(), reqwest::Error> {
-    let confirmation_link = "https://my-api.com/subscriptions/confirm";
+    let confirmation_link = format!("{base_url}/subscriptions/confirm?subscription_token=mytoken");
     let plain_body = format!(
         "Welcome to our newsletter!\nVisit {} to confirm your subscription.",
         confirmation_link,
