@@ -30,6 +30,7 @@ secrecy = { version = "0.8.0", features = ["serde"] }
 unicode-segmentation = "1.11.0"
 validator = "0.14"
 rand_core = "0.6.4"
+rand = { version = "0.8", features = ["std_rng"] }
 reqwest = { version = "0.12.3", default-features = false, features = ["json", "rustls-tls"] }
 
 [dev-dependencies]
