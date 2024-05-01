@@ -1,5 +1,5 @@
-use wiremock::{Mock, ResponseTemplate};
 use wiremock::matchers::{method, path};
+use wiremock::{Mock, ResponseTemplate};
 
 use crate::helpers;
 

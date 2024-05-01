@@ -1,9 +1,9 @@
 use std::net::TcpListener;
 
-use actix_web::{App, HttpServer, web};
 use actix_web::dev::Server;
-use sqlx::PgPool;
+use actix_web::{web, App, HttpServer};
 use sqlx::postgres::PgPoolOptions;
+use sqlx::PgPool;
 use tracing_actix_web::TracingLogger;
 
 use crate::configuration::{DatabaseSettings, Settings};
@@ -40,7 +40,12 @@ impl Application {
         );
         let listener = TcpListener::bind(address)?;
         let port = listener.local_addr().unwrap().port();
-        let server = run(listener, connection_pool, email_client, configuration.application.base_url)?;
+        let server = run(
+            listener,
+            connection_pool,
+            email_client,
+            configuration.application.base_url,
+        )?;
 
         Ok(Self { port, server })
     }
@@ -81,7 +86,7 @@ fn run(
             .app_data(email_client.clone())
             .app_data(base_url.clone())
     })
-        .listen(listener)?
-        .run();
+    .listen(listener)?
+    .run();
     Ok(server)
 }

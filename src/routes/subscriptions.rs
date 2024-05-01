@@ -1,4 +1,4 @@
-use actix_web::{HttpResponse, web};
+use actix_web::{web, HttpResponse};
 use chrono::Utc;
 use serde::Deserialize;
 use sqlx::PgPool;
@@ -58,8 +58,8 @@ pub async fn subscribe(
 }
 
 #[tracing::instrument(
-name = "Saving new subscriber details in the database",
-skip(pool, new_subscriber)
+    name = "Saving new subscriber details in the database",
+    skip(pool, new_subscriber)
 )]
 pub async fn insert_subscriber(
     pool: &PgPool,
@@ -75,12 +75,12 @@ pub async fn insert_subscriber(
         new_subscriber.name.as_ref(),
         Utc::now()
     )
-        .execute(pool)
-        .await
-        .map_err(|e| {
-            tracing::error!("Failed to execute query: {:?}", e);
-            e
-        })?;
+    .execute(pool)
+    .await
+    .map_err(|e| {
+        tracing::error!("Failed to execute query: {:?}", e);
+        e
+    })?;
     Ok(())
 }
 

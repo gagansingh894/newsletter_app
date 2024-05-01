@@ -4,8 +4,8 @@ use sqlx::{Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
 use wiremock::MockServer;
 
-use newsletter_app::configuration::{DatabaseSettings, get_configuration};
-use newsletter_app::startup::{Application, get_connection_pool};
+use newsletter_app::configuration::{get_configuration, DatabaseSettings};
+use newsletter_app::startup::{get_connection_pool, Application};
 use newsletter_app::telemetry::{get_subscriber, init_subscriber};
 
 pub struct ConfirmationLinks {
@@ -44,10 +44,7 @@ impl TestApp {
             .expect("Failed to execute request")
     }
 
-    pub fn get_confirmation_links(
-        &self,
-        email_request: &wiremock::Request,
-    ) -> ConfirmationLinks {
+    pub fn get_confirmation_links(&self, email_request: &wiremock::Request) -> ConfirmationLinks {
         let body: serde_json::Value = serde_json::from_slice(&email_request.body).unwrap();
 
         let get_link = |s: &str| {
@@ -69,10 +66,7 @@ impl TestApp {
 
         let html = get_link(&body["HtmlBody"].as_str().unwrap());
         let plain_text = get_link(&body["TextBody"].as_str().unwrap());
-        ConfirmationLinks {
-            html,
-            plain_text,
-        }
+        ConfirmationLinks { html, plain_text }
     }
 }
 
