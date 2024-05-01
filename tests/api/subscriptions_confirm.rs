@@ -33,8 +33,6 @@ async fn the_link_returned_by_subscribe_returns_200_if_called() {
         .await;
 
     app.post_subscriptions(body.into()).await;
-    let email_request = &app.email_server.received_requests().await.unwrap()[0];
-    let body: serde_json::Value = serde_json::from_slice(&email_request.body).unwrap();
 
     // extract the link
     let email_request = &app.email_server.received_requests().await.unwrap()[0];
